@@ -1,75 +1,76 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>AI Inbox Dashboard</title>
-</head>
-<body>
-  <h1>Inbox Automation</h1>
-  <pre id="log">Waiting for data...</pre>
-</body>
-</html>
-
-<!DOCTYPE html>
-<html>
-<head>
+  <meta charset="utf-8" />
   <title>Inbox Automation</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 40px;
-    }
-    textarea {
-      width: 100%;
-      height: 120px;
-    }
-    button {
-      padding: 10px 20px;
-      margin-top: 10px;
-    }
-    pre {
-      background: #f4f4f4;
-      padding: 15px;
-      margin-top: 20px;
-      white-space: pre-wrap;
-    }
+    body { font-family: Arial, sans-serif; padding: 40px; max-width: 900px; }
+    textarea { width: 100%; height: 140px; }
+    input { width: 100%; padding: 10px; margin: 10px 0; }
+    button { padding: 10px 20px; margin-top: 10px; cursor: pointer; }
+    pre { background: #f4f4f4; padding: 15px; margin-top: 20px; white-space: pre-wrap; }
   </style>
 </head>
 <body>
 
   <h1>Inbox Automation</h1>
 
-  <textarea id="message" placeholder="Enter a test message..."></textarea><br>
-  <button onclick="send()">Send</button>
+  <label><b>Railway API URL</b> (example: https://your-app.up.railway.app)</label>
+  <input id="baseUrl" placeholder="https://YOUR-RAILWAY-URL" />
+
+  <label><b>Test message</b></label>
+  <textarea id="message" placeholder="Enter a test message...">Hi, I need a quote for your services</textarea><br>
+
+  <button id="sendBtn">Send</button>
 
   <pre id="log">Waiting for data...</pre>
 
   <script>
-    const API_URL = "https://ai-inbox-automation-production.up.railway.app
-";
+    const logEl = document.getElementById("log");
+    const sendBtn = document.getElementById("sendBtn");
+
+    function log(msg) {
+      logEl.textContent = msg;
+    }
 
     async function send() {
-      const msg = document.getElementById("message").value;
-      document.getElementById("log").textContent = "Processing...";
+      const baseUrl = document.getElementById("baseUrl").value.trim();
+      const msg = document.getElementById("message").value.trim();
+
+      if (!baseUrl) return log("❌ Please paste your Railway base URL first.");
+      if (!msg) return log("❌ Please type a message.");
+
+      const url = baseUrl.replace(/\/$/, "") + "/ingest";
+
+      log("Sending to: " + url + " ...");
 
       try {
-        const res = await fetch(API_URL, {
+        const res = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: msg,
-            sender: "dashboard@test.com"
-          })
+          body: JSON.stringify({ message: msg, sender: "dashboard@test.com" })
         });
 
-        const data = await res.json();
-        document.getElementById("log").textContent =
-          JSON.stringify(data, null, 2);
+        const text = await res.text(); // read raw response first
+
+        if (!res.ok) {
+          return log("❌ HTTP " + res.status + "\n\n" + text);
+        }
+
+        // Try parse JSON
+        try {
+          const data = JSON.parse(text);
+          log("✅ Success:\n\n" + JSON.stringify(data, null, 2));
+        } catch {
+          log("✅ Response (not JSON):\n\n" + text);
+        }
 
       } catch (e) {
-        document.getElementById("log").textContent =
-          "Error connecting to API";
+        log("❌ Fetch failed:\n\n" + e.message + "\n\nMost common causes:\n- Wrong Railway URL\n- CORS blocked\n- Railway service not public");
       }
     }
+
+    sendBtn.addEventListener("click", send);
   </script>
 
 </body>
