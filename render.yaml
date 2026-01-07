@@ -1,0 +1,5 @@
+services:
+  - type: web
+    name: inbox-dashboard
+    env: static
+    staticPublishPath: dashboard
