@@ -22,6 +22,8 @@
   <textarea id="message" placeholder="Enter a test message...">Hi, I need a quote for your services</textarea><br>
 
   <button id="sendBtn">Send</button>
+  <button id="loadBtn">Load Recent</button>
+
 
   <pre id="log">Waiting for data...</pre>
 
@@ -71,7 +73,34 @@
     }
 
     sendBtn.addEventListener("click", send);
+
+    const loadBtn = document.getElementById("loadBtn");
+
+async function loadRecent() {
+  const rawBase = document.getElementById("baseUrl").value;
+  const baseUrl = normalizeBaseUrl(rawBase);
+  if (!baseUrl) return log("❌ Please paste your Railway base URL first.");
+
+  const url = baseUrl + "/messages?limit=20";
+  log("Loading: " + url + " ...");
+
+  try {
+    const res = await fetch(url);
+    const text = await res.text();
+
+    if (!res.ok) return log("❌ HTTP " + res.status + "\n\n" + text);
+
+    const data = JSON.parse(text);
+    log("✅ Recent messages:\n\n" + JSON.stringify(data, null, 2));
+  } catch (e) {
+    log("❌ Load failed:\n\n" + e.message);
+  }
+}
+
+loadBtn.addEventListener("click", loadRecent);
+
   </script>
 
 </body>
 </html>
+
