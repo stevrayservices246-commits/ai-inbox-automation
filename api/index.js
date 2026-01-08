@@ -1,14 +1,13 @@
 import express from "express";
 import bodyParser from "body-parser";
+
 import ingest from "./routes/ingest.js";
+import messages from "./routes/messages.js"; // ✅ make sure this file exists
 import { initDb } from "./db.js";
-import messages from "./routes/messages.js";
-app.use("/messages", messages);
 
+const app = express(); // ✅ app must be created BEFORE app.use calls
 
-const app = express();
-
-// ✅ CORS
+// ✅ CORS for Render -> Railway
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
@@ -19,16 +18,22 @@ app.use((req, res, next) => {
 
 app.use(bodyParser.json());
 
+// ✅ routes
 app.use("/ingest", ingest);
+app.use("/messages", messages);
 
+// ✅ health check
 app.get("/", (_, res) => res.send("AI Inbox Automation Running"));
 
-// ✅ Add this:
+// ✅ init DB (won't crash if DATABASE_URL missing)
 initDb()
   .then(() => console.log("✅ DB ready"))
   .catch((e) => console.error("❌ DB init error:", e));
 
-app.listen(process.env.PORT || 3000);
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log(`✅ Server listening on ${port}`));
+
+
 
 
 
