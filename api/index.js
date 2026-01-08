@@ -2,6 +2,9 @@ import express from "express";
 import bodyParser from "body-parser";
 import ingest from "./routes/ingest.js";
 import { initDb } from "./db.js";
+import messages from "./routes/messages.js";
+app.use("/messages", messages);
+
 
 const app = express();
 
@@ -26,6 +29,7 @@ initDb()
   .catch((e) => console.error("❌ DB init error:", e));
 
 app.listen(process.env.PORT || 3000);
+
 
 
 
