@@ -1,5 +1,9 @@
 services:
   - type: web
     name: inbox-dashboard
-    env: static
+    runtime: static
     staticPublishPath: dashboard
+    envVars:
+      - key: SKIP_INSTALL_DEPS
+        value: "true"
+
